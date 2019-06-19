@@ -11,6 +11,8 @@
     - 切片
     - 对序列使用+和*
         - 建立由列表组成的列表
+        - 序列的增量赋值
+    - `list.sort`和`sorted`函数
 
 <!-- /MarkdownTOC -->
 
@@ -21,7 +23,7 @@
 1. [`Collections.namedtuple()`](#namedtuple):用来创建一个自定义的tuple对象，并且规定了tuple元素的个数，并可以用属性而不是索引来引用tuple的某个元素。这样一来，我们用namedtuple可以很方便地定义一种数据类型，它具备tuple的不变性，又可以根据属性来引用，使用十分方便。
 2. `_card`:设置私有变量。
 3. `Card._card.index(value)`: 返回列表中`value`对应的索引。
-4. `sorted()`函数`key`参数：接受一个函数名，这个函数规定了元素以何种方式进行排序，并返回一个数值。 
+4. [`sorted()`函数]`key`(#sorted)参数：接受一个函数名，这个函数规定了元素以何种方式进行排序，并返回一个数值。 
 5. [列表生成式](#listcomps)
 
 示例1-1展现如何实现`__getitem__`和`__len__`两个特殊方法：
@@ -445,8 +447,9 @@ TypeError: can only assign an iterable
 >>> id(s1 + s2)
 2878932993712
 ```
-###### 建立由列表组成的列表  
-使用列表推导式来建立嵌套列表
+
+###### 建立由列表组成的列表
+使用列表推导式来建立嵌套列表  
 **示例2-10：一个包含3个列表的列表，嵌套的列表各自有三个元素**
 ```python
 >>> borad = [['_'] * 3 for i in range(3)]
@@ -486,3 +489,85 @@ TypeError: can only assign an iterable
 ...    board.append(row)
 ```
 **外面的列表其实是包含3个指向同一个列表的引用。**
+
+###### 序列的增量赋值
+1. `+=`和`*=`背后的特殊方法是`__iadd__`和`__imul__`。如果一个类没有实现这个方法的话，Python会退一步调用`__add__`和`__mul__`。
+2. 可变序列一般都实现了`__add__`和`__mul__`方法，同时，等式左边的变量会就地改变，即不会重新创建新的变量。而不可变序列根本就不支持这个操作，自然没有实现这个方法。
+```python
+>>> l = [1, 2, 3]
+>>> id(l)
+1741599630024
+>>> l *= 2
+>>> id(l)
+1741599630024
+>>> l
+[1, 2, 3, 1, 2, 3]
+>>> t = (1, 2, 3)
+>>> t *= 2
+>>> t
+(1, 2, 3, 1, 2, 3)
+>>> id(t)
+1741599919752
+```
+
+**示例2-11展示了一个关于元组不可变性的特殊情况**  
+```python
+t = (1, 2, [30, 40])
+>>> t[2] += [50, 60]
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: 'tuple' object does not support item assignment
+>>> t
+(1, 2, [30, 40, 50, 60])
+```
+因为tuple不支持对他的元素赋值，所以会抛出`TypeError`的错误，但是t仍然变成了`(1, 2, [30, 40, 50, 60])`。  
+查看Python的字节码：
+```python
+>>> import dis
+>>> dis.dis('s[a] += b')
+  1           0 LOAD_NAME                0 (s)
+              2 LOAD_NAME                1 (a)
+              4 DUP_TOP_TWO
+              6 BINARY_SUBSCR                       ① 
+              8 LOAD_NAME                2 (b)
+             10 INPLACE_ADD                         ②
+             12 ROT_THREE
+             14 STORE_SUBSCR                        ③
+             16 LOAD_CONST               0 (None)
+             18 RETURN_VALUE
+```
+① 将`s[a]`的值存入TOS（栈顶）；
+② 计算`TOS +=b`。这一步能够完成，是因为TOS指向的是一个列表，即可变对象；
+③ `s[a] = TOS`赋值操作抛出TypeError异常。  
+这个例子的启示：  
+- 不要把可变对象放在元组中。  
+- 增量赋值不是一个原子操作。
+
+##### <a id='sorted'>`list.sort`和`sorted`函数 </a>
+- `list.sort()`方法就地排序，不会把原列表复制一份，返回值为None；
+- 内置函数`sorted()`会新建一个列表作为返回值。
+- 这个两个关键字都有两个可选的关键字参数：
+    + `reverse`：是否逆序，默认为`Flase`
+    + `key`：一个只有一个参数的函数，这个函数会被用在序列里的每一个元素
+上，所产生的结果将是排序算法依赖的对比关键字。  
+
+```python
+>>> fruits = ['grape', 'raspberry', 'apple', 'banana']
+>>> sorted(fruits)
+['apple', 'banana', 'grape', 'raspberry']
+>>> fruits
+['grape', 'raspberry', 'apple', 'banana']
+>>> sorted(fruits, reverse=True)
+['raspberry', 'grape', 'banana', 'apple']
+>>> fruits
+['grape', 'raspberry', 'apple', 'banana']
+>>> sorted(fruits, key=len)
+['grape', 'apple', 'banana', 'raspberry']
+>>> sorted(fruits, key=len, reverse=True)
+['raspberry', 'banana', 'grape', 'apple']
+>>> fruits
+['grape', 'raspberry', 'apple', 'banana']
+>>> fruits.sort()
+>>> fruits
+['apple', 'banana', 'grape', 'raspberry']
+```
