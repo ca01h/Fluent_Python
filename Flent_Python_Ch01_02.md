@@ -2,16 +2,22 @@
 
 - 第一章 Python数据模型
 - 第二章 序列构成的数组
-    - 列表推导和生成器表达式
-    - 元组不仅仅是不可变的列表
-        - 元组的第一个作用：数据记录
-        - 具名元组
-        - 元组的第二个作用：作为不可变的列表
-    - 切片
-    - 对序列使用+和*
-        - 建立由列表组成的列表
-        - 序列的增量赋值
-    - `list.sort`和`sorted`函数
+  - 列表推导和生成器表达式
+  - 元组不仅仅是不可变的列表
+    - 元组的第一个作用：数据记录
+    - 用*来处理剩下的元素
+    - 具名元组
+    - 元组的第二个作用：作为不可变的列表
+  - 切片
+  - 对序列使用+和*
+    - 建立由列表组成的列表
+    - 序列的增量赋值
+  - `list.sort`和`sorted`函数
+  - 数组、内存视图、Numpy和双向队列
+    - 数组
+    - 内存视图
+    - Numpy和Scipy
+    - 双向队列
 
 <!-- /MarkdownTOC -->
 
@@ -19,10 +25,10 @@
 这一章中，作者介绍了Python数据模型，主要是Python的一些特殊方法，在这里我体会到了“鸭子类型”的含义，只要你在自定义的类中实现了某些特殊方法，例如：`__len__` `__getitem__` `__iter__`等等，你就可以调用`len()` `Object[index]` `for...in...`等函数。
 
 前置知识：  
-1. [`Collections.namedtuple()`](#namedtuple):用来创建一个自定义的tuple对象，并且规定了tuple元素的个数，并可以用属性而不是索引来引用tuple的某个元素。这样一来，我们用namedtuple可以很方便地定义一种数据类型，它具备tuple的不变性，又可以根据属性来引用，使用十分方便。
-2. `_card`:设置私有变量。
-3. `Card._card.index(value)`: 返回列表中`value`对应的索引。
-4. [`sorted()`函数]`key`(#sorted)参数：接受只有一个参数的函数名，这个函数规定了元素以何种方式进行排序，并返回一个数值。 
+1. [`Collections.namedtuple()`](#namedtuple):用来创建一个自定义的tuple对象，并且规定了tuple元素的个数，并可以用属性而不是索引来引用tuple的某个元素。这样一来，我们用namedtuple可以很方便地定义一种数据类型，它具备tuple的不变性，又可以根据属性来引用，使用十分方便。  
+2. `_card`:设置私有变量。  
+3. `Card._card.index(value)`: 返回列表中`value`对应的索引。  
+4. [`sorted()`函数](#sorted)的`key`  参数：接受一个函数名，这个函数规定了元素以何种方式进行排序，并返回一个数值。   
 5. [列表生成式](#listcomps)
 
 示例1-1展现如何实现`__getitem__`和`__len__`两个特殊方法：
@@ -222,7 +228,7 @@ white L
 
 ##### 元组不仅仅是不可变的列表  
 ###### 元组的第一个作用：数据记录  
-元组其实是对数据的记录：元组中的每个元素都存放了记录中一个字段的数据，外加这个字段的位置。正是这个位置信息给数据赋予了意义。(*对于这句话还有待进一步的理解*)
+元组其实是对数据的记录：元组中的每个元素都存放了记录中一个字段的数据，外加这个字段的位置。正式这个位置信息 给数据赋予了意义。(*对于这句话还有待进一步的理解*)
 
 **示例2-6：把元组用作记录。如果在任何的表达式中我们在元组内对元素排序，这些元素所携带的信息就会丢失，因为这些信息是跟它们的位置有关的。**
 ```python
@@ -259,8 +265,8 @@ ESP
 >>> b, a = a, b
 ```
 
-3. 用\*号运算符把一个可迭代对象拆开作为函数的参数  
-前置知识：`divmod()`函数把除数和余数运算结果结合起来，返回一个包含商和余数的元组(a // b, a % b)。
+3. 用*号运算符把一个可迭代对象拆开作为函数的参数
+前置知识：python divmod() 函数把除数和余数运算结果结合起来，返回一个包含商和余数的元组(a // b, a % b)。
 ```python
 >>> divmod(20, 8)
 (2, 4)
@@ -272,7 +278,7 @@ ESP
 (2, 4)
 ```
 除此之外，在元组拆包中使用*也可以帮助我们把注意力集中在元组的部分元素上。  
-4. 用\*来处理剩下的元素  
+###### 用*来处理剩下的元素  
 在Python中，函数用`*args`来获取不确定数量的参数算是一种经典写法了。这个概念被扩展到了平行赋值中：
 ```python
 >>> a, b, *rest = range(5)
@@ -294,7 +300,7 @@ ESP
 ([0, 1], 2, 3, 4)
 ```
 
-5. 函数以元组的形式返回多个值  
+4. 函数以元组的形式返回多个值
 前置知识：os.path.split()函数会返回以路径和最后一个文件名组成的元组(path, last_part)。
 ```python
 >>> import os
@@ -511,7 +517,7 @@ TypeError: can only assign an iterable
 1741599919752
 ```
 
-**示例2-11：展示一个关于元组不可变性的特殊情况**  
+**示例2-11展示了一个关于元组不可变性的特殊情况**  
 ```python
 t = (1, 2, [30, 40])
 >>> t[2] += [50, 60]
@@ -541,7 +547,6 @@ TypeError: 'tuple' object does not support item assignment
 ② 计算`TOS +=b`。这一步能够完成，是因为TOS指向的是一个列表，即可变对象；
 ③ `s[a] = TOS`赋值操作抛出TypeError异常。  
 这个例子的启示：  
-
 - 不要把可变对象放在元组中。  
 - 增量赋值不是一个原子操作。
 
@@ -552,7 +557,7 @@ TypeError: 'tuple' object does not support item assignment
     + `reverse`：是否逆序，默认为`Flase`
     + `key`：一个只有一个参数的函数，这个函数会被用在序列里的每一个元素
 上，所产生的结果将是排序算法依赖的对比关键字。  
-
+示例2-12：
 ```python
 >>> fruits = ['grape', 'raspberry', 'apple', 'banana']
 >>> sorted(fruits)
@@ -573,3 +578,81 @@ TypeError: 'tuple' object does not support item assignment
 >>> fruits
 ['apple', 'banana', 'grape', 'raspberry']
 ```
+
+##### 数组、内存视图、Numpy和双向队列
+###### 数组
+如果只需要一个包含数字的列表，那么`array.arrya`比`list`更高效。
+前置知识：
+
+1. `array.array(typecode[, initializer])`：`typecode`指定数组存放的数据类型，数组的初始值由可选参数`initializer`决定，它必须是`str`,`list`或者其他可迭代对象。这里，可迭代对象是一个生成器表达式。
+2. `array.tofile(f)`：将数组中的所有值，以machine value的方式写入文件对象f。
+3. `array.fromfile(f, n)`：从文件对象f中读取n个值附加至数组后。
+4. 常用的`Type Code`:
+
+| Type Code | python type |    C Type    |
+|-----------|-------------|--------------|
+| 'c'       | char        | char         |
+| 'h'       | int         | signed short |
+| 'i'       | int         | signed int   |
+| 'd'       | float       | double       |
+| 'f'       | float       | float        |
+
+示例2-13：一个浮点型数组的创建、存入文件和从文件读取的过程。
+```python
+>>> from array import array
+>>> from random import random
+>>> floats = array('d', (random() for i in range(10**7)))
+>>> floats[-1]
+0.012809699227165683
+>>> fp = open('floats.bin', 'wb')
+>>> floats.tofile(fp)
+>>> fp.close()
+>>> floats2 = array('d')
+>>> fp = open('floats.bin', 'rb')
+>>> floats2.fromfile(fp, 10**7)
+>>> fp.close()
+>>> floats2[-1]
+0.012809699227165683
+>>> floats2 == floats
+True
+```
+**注意：**
+
+1. 要给数组排序的话，得使用sorted函数新建一个数组：
+`a = array.array(a.typecode, sorted(a))`
+2. 不打乱次序的情况下为数组添加新元素，可以使用`bisect.insort()`
+
+###### 内存视图
+略
+###### Numpy和Scipy
+略
+###### 双向队列
+示例2-14：使用双向队列的几种典型操作
+前置知识：
+1. `maxlen`是一个可选参数，设定这个队列可以容纳的元素的数量，已经设定不能变更。
+2. `deque.rotate()`接收一个参数n，n>0时，队列最右边的n个元素会移动到队列的左边；n<0时，队列最左边的n个元素会移动到队列的右边。
+3. `deque.appendleft()`在队列左边添加一个元素，若添加之前队列已满，它的尾部元素会被删除掉。
+4. `deque.extend(iter)`和`deque.extendleft(iter)`功能类似`append`函数，但`extend`接收的是一个可迭代类型，可一次添加多个元素。
+5. `deque.extendleft()`比较特殊，迭代器中地元素会逆序出现在队列中。
+```python
+>>> from collections import deque
+>>> dq = deque(range(10), maxlen=10)
+>>> dq
+deque([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], maxlen=10)
+>>> dq.rotate(3)
+>>> dq
+deque([7, 8, 9, 0, 1, 2, 3, 4, 5, 6], maxlen=10)
+>>> dq.rotate(-4)
+>>> dq
+deque([1, 2, 3, 4, 5, 6, 7, 8, 9, 0], maxlen=10)
+>>> dq.appendleft(-1)
+>>> dq
+deque([-1, 1, 2, 3, 4, 5, 6, 7, 8, 9], maxlen=10)
+>>> dq.extend([11, 22, 33])
+>>> dq
+deque([3, 4, 5, 6, 7, 8, 9, 11, 22, 33], maxlen=10)
+>>> dq.extendleft([10, 20, 30, 40])
+>>> dq
+deque([40, 30, 20, 10, 3, 4, 5, 6, 7, 8], maxlen=10)
+```
+
